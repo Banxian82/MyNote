@@ -43,30 +43,30 @@ Copyright (C) 2025 by Norbury <NorburyMJ@outlook.com>
 % \DoNotIndex{\AtBeginDocument,\AtEndDocument}
 % 
 
-\GetFileInfo{\jobname.dtx}
+% \GetFileInfo{\jobname.dtx}
 
-\def\indexname{索引}
-\IndexPrologue{\section{\indexname}}
+% \def\indexname{索引}
+% \IndexPrologue{\section{\indexname}}
 
-\title{\bfseries\color{violet}
-    \notethesis : 笔记模板
-}
-\author{{\fangsong Norbury}[5pt]\texttt{NorburyMJ@outlook.com}}
-\date{v\fileversion\ (\filedata)}
-\maketitle\thispagestyle{empty}
+% \title{\bfseries\color{violet}
+%     \notethesis : 笔记模板
+% }
+% \author{{\fangsong Norbury}[5pt]\texttt{NorburyMJ@outlook.com}}
+% \date{v\fileversion\ (\filedata)}
+% \maketitle\thispagestyle{empty}
 
 
-\section{实现细节}
+% \section{实现细节}
 
-\subsection{基本信息}
-\begin{macrocode}
-    <cls>\NeedsTeXFormat{LaTeX2e}[2019]
-    <cls>\ProvidesClass{notethesis}
-    <cls>[2025/07/01 note thesis template]
-\end{macrocode}
+% \subsection{基本信息}
+% \begin{macrocode}
+%     <cls>\NeedsTeXFormat{LaTeX2e}[2019]
+%     <cls>\ProvidesClass{notethesis}
+%     <cls>[2025/07/01 note thesis template]
+% \end{macrocode}
 
-报错
-\begin{macrocode}
+% 报错
+% \begin{macrocode}
     \newcommand\note@error[1]{
         \ClassError{notethesis}{#1}{}
     }
@@ -85,31 +85,31 @@ Copyright (C) 2025 by Norbury <NorburyMJ@outlook.com>
             \fi
         }
     }
-\end{macrocode}
+% \end{macrocode}
 
 
-检查 \LaTeXe{} kernel 版本
+% 检查 \LaTeXe{} kernel 版本
 
-\begin{macrocode}
+% \begin{macrocode}
     \@ifl@t@r\fmtversion{2020/01/01}{}{
         \note@error{
             TeX Live 2020 or later version is required to compile this document.
         }
     }
-\end{macrocode}
+% \end{macrocode}
 
-检查编译引擎，要求使用 \XeLaTeX 
-\begin{macrocode}
+% 检查编译引擎，要求使用 \XeLaTeX 
+% \begin{macrocode}
     \RequirePackage{iftex}
     \ifXeTeX\else
         \note@error{XeLaTeX is required to compile this document}
     \fi
-\end{macrocode}
+% \end{macrocode}
 
-\subsection{定义选项}
-\label{sec:defoption}
-定义论文类型以及是否涉密
-\begin{macrocode}
+% \subsection{定义选项}
+% \label{sec:defoption}
+% 定义论文类型以及是否涉密
+% \begin{macrocode}
     <*cls>
     \hyphenation{Note-Thesis} % 告诉 TeX 在断词时如何正确地在连字符处断开这些单词。
     \def\notethesis{NoteThesis}
@@ -123,17 +123,17 @@ Copyright (C) 2025 by Norbury <NorburyMJ@outlook.com>
         setkeys=\kvsetkeys
     }
      
-\end{macrocode}
+% \end{macrocode}
 
-\begin{macro}{\notesetup}
-    提供一个 \cs{notesetup} 命令支持 \emph{key-value} 的方式设置。
-    \begin{macrocode}
+% \begin{macro}{\notesetup}
+%     提供一个 \cs{notesetup} 命令支持 \emph{key-value} 的方式设置。
+%     \begin{macrocode}
         \newcommand\notesetup[1]{
             \kvsetkeys{note}{#1}
         }
-    \end{macrocode}
+%     \end{macrocode}
 
-\end{macro}
+% \end{macro}
 
 % 同时用 \emph{key-value} 的方式来定义这些接口：
 % \begin{latex}
@@ -150,9 +150,1359 @@ Copyright (C) 2025 by Norbury <NorburyMJ@outlook.com>
 % \end{latex}
 % 
 
-\begin{macrocode}
+% \begin{macrocode}
     \newcommand\note@define@key[1]{
         \kvsetkeys{note@key}{#1}
     }
     \kv@set@family@handler{note@key}{}
+% \end{macrocode}
+
+% \begin{macrocode}
+    \@namedef{note@#1@@name}{#1}
+    \def\note@@default{}
+    \def\note@@choices{}
+    \kv@define@key{note@value}{name}{
+        \@namedef{note@#1@@name}{##1}
+    }
+% \end{macrocode}
+
+
+% 定义键值选项时，为每一个选项创建对应的“检查”和“执行”宏
+% \begin{macrocode}
+    \@namedef{note@#1@@check}{}
+    \@namedef{note@#1@@code}{}
+% \end{macrocode}
+
+% 保存下 |choices = {}| 定义的内容，在定义 \cs{note@\meta{name}} 后再执行。
+%
+%    \begin{macrocode}
+  \kv@define@key{note@value}{choices}{%
+    \def\note@@choices{##1}%
+    \@namedef{note@#1@@reset}{}%
+%    \end{macrocode}
+%
+% \cs{note@\meta{key}@check} 检查 |value| 是否有效，
+% 并设置 \cs{ifnote@\meta{name}@\meta{value}}。
+%
+%    \begin{macrocode}
+    \@namedef{note@#1@@check}{%
+      \@ifundefined{%
+        ifnote@\@nameuse{note@#1@@name}@\@nameuse{note@\@nameuse{note@#1@@name}}%
+      }{%
+        \note@error{Invalid value "#1 = \@nameuse{note@\@nameuse{note@#1@@name}}"}%
+      }%
+      \@nameuse{note@#1@@reset}%
+      \@nameuse{note@\@nameuse{note@#1@@name}@\@nameuse{note@\@nameuse{note@#1@@name}}true}%
+    }%
+  }%
+  \kv@define@key{note@value}{default}{%
+    \def\note@@default{##1}%
+  }%
+  \kvsetkeys{note@value}{#2}%
+  \@namedef{note@\@nameuse{note@#1@@name}}{}%
+%    \end{macrocode}
+%
+% 第一个 \meta{choice} 设为 \meta{default}，
+% 并且对每个 \meta{choice} 定义 \cs{ifnote@\meta{name}@\meta{choice}}。
+%
+%    \begin{macrocode}
+  \kv@set@family@handler{note@choice}{%
+    \ifx\note@@default\@empty
+      \def\note@@default{##1}%
+    \fi
+    \expandafter\newif\csname ifnote@\@nameuse{note@#1@@name}@##1\endcsname
+    \expandafter\g@addto@macro\csname note@#1@@reset\endcsname{%
+      \@nameuse{note@\@nameuse{note@#1@@name}@##1false}%
+    }%
+  }%
+  \kvsetkeys@expandafter{note@choice}{\note@@choices}%
+%    \end{macrocode}
+%
+% 将 \meta{default} 赋值到 \cs{note@\meta{name}}，如果非空则执行相应的代码。
+%
+%    \begin{macrocode}
+  \expandafter\let\csname note@\@nameuse{note@#1@@name}\endcsname\note@@default
+  \expandafter\ifx\csname note@\@nameuse{note@#1@@name}\endcsname\@empty\else
+    \@nameuse{note@#1@@check}%
+  \fi
+%    \end{macrocode}
+%
+% 定义 \cs{notesetup} 接口。
+%
+%    \begin{macrocode}
+  \kv@define@key{note}{#1}{%
+    \@namedef{note@\@nameuse{note@#1@@name}}{##1}%
+    \@nameuse{note@#1@@check}%
+    \@nameuse{note@#1@@code}%
+  }%
+
+%    \end{macrocode}
+%
+% 定义接口向 |key| 添加 |code|：
+%
+%    \begin{macrocode}
+\newcommand\note@option@hook[2]{%
+  \expandafter\g@addto@macro\csname note@#1@@code\endcsname{#2}%
+}
+%    \end{macrocode}
+
+% 设置学位类型
+\begin{macrocode}
+	degree = {
+		choices = {
+			bachelor,
+			master,
+			doctor,
+			postdoc,
+		},
+		
+		degree-type = {
+			default = academic,
+			choices = {
+				academic,
+				professional,
+			},
+		name = degree@type,
+	},
+	
 \end{macrocode}
+
+
+论文的主要语言
+\begin{macrocode}
+	main-language = {
+		name = main@language,
+		choices = {
+			chinese,
+			english,
+		},
+	},
+	
+\end{macrocode}
+
+字体
+%\begin{macrocode}
+  fontset = {
+    choices = {
+      windows,
+      mac,
+      ubuntu,
+      fandol,
+      none,
+    },
+    default = none,
+  },
+  system = {
+    choices = {
+      mac,
+      unix,
+      windows,
+      auto,
+    },
+    default = auto,
+  },
+  font = {
+    choices = {
+      times,
+      termes,
+      auto,
+      none,
+      external,
+    },
+    default = auto,
+  },
+  cjk-font = {
+    name = cjk@font,
+    choices = {
+      windows,
+      mac,
+      noto,
+      fandol,
+      auto,
+      none,
+      external,
+    },
+    default = auto,
+  },
+  math-font = {
+    name = math@font,
+    choices = {
+      cambria,
+      xits,
+      stix,
+      none,
+      times,
+    },
+    default = cambria,
+  },
+  math-style = {
+    name = math@style,
+    choices = {
+      GB,
+      TeX,
+    },
+  },
+%\end{macrocode}
+%
+% 选择打印版还是用于上传的电子版。
+%\begin{macrocode}
+  output = {
+    choices = {
+      print,
+      electronic,
+    },
+    default = print,
+  },
+}
+\newif\ifthu@degree@graduate
+\newcommand\note@set@graduate{%
+  \note@degree@graduatefalse
+  \ifthu@degree@doctor
+    \note@degree@graduatetrue
+  \fi
+  \ifthu@degree@master
+    \note@degree@graduatetrue
+  \fi
+}
+\note@set@graduate
+\note@option@hook{degree}{%
+  \note@set@graduate
+}
+%    \end{macrocode}
+%
+% 设置默认 \option{openany}。
+%    \begin{macrocode}
+\DeclareBoolOption[false]{openright}
+\DeclareComplementaryOption{openany}{openright}
+%    \end{macrocode}
+%
+% \option{raggedbottom} 选项（默认打开）
+%    \begin{macrocode}
+\DeclareBoolOption[true]{raggedbottom}
+%    \end{macrocode}
+%
+% 将选项传递给 \pkg{ctexbook}。
+%    \begin{macrocode}
+\DeclareDefaultOption{\PassOptionsToClass{\CurrentOption}{ctexbook}}
+%    \end{macrocode}
+%
+% 解析用户传递过来的选项，并加载 \pkg{ctexbook}。
+%    \begin{macrocode}
+\ProcessKeyvalOptions*
+%    \end{macrocode}
+%
+% 设置默认 \option{openany}。
+%    \begin{macrocode}
+\ifthu@openright
+  \PassOptionsToClass{openright}{book}
+\else
+  \PassOptionsToClass{openany}{book}
+\fi
+%    \end{macrocode}
+%
+% 使用 \pkg{ctexbook} 类，优于调用 \pkg{ctex} 宏包。
+%    \begin{macrocode}
+\PassOptionsToPackage{quiet}{fontspec}
+\LoadClass[a4paper,UTF8,zihao=-4,scheme=plain,fontset=none]{ctexbook}[2017/04/01]
+%    \end{macrocode}
+%
+%
+% \subsection{装载宏包}
+% \label{sec:loadpackage}
+%
+% 引用的宏包和相应的定义。
+%    \begin{macrocode}
+\RequirePackage{etoolbox}
+\RequirePackage{filehook}
+\RequirePackage{xparse}
+%    \end{macrocode}
+%
+% 利用 \pkg{textcase} 英文大小写转换。
+%    \begin{macrocode}
+\RequirePackage{textcase}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\RequirePackage{geometry}%
+%    \end{macrocode}
+%
+% 利用 \pkg{fancyhdr} 设置页眉页脚。
+%    \begin{macrocode}
+\RequirePackage{fancyhdr}
+%    \end{macrocode}
+%
+%    \begin{macrocode}
+\RequirePackage{titletoc}
+%    \end{macrocode}
+
+利用 \pkg{notoccite} 避免目录中引用编号混乱
+\begin{macrocode}
+	\RequirePackage{notoccite}	
+\end{macrocode}
+
+\AmSTeX\ 宏包，用来排版出漂亮的公式
+\begin{macrocode}
+	\RequirePackage{amamath}	
+\end{macrocode}
+
+使用 \pkg{unicode-math} 处理数学字体
+\begin{macrocode}
+	\RequirePackage{unicode-math}	
+\end{macrocode}
+
+图形支持宏包
+\begin{macrocode}
+	\RequirePackage{graphicx}	
+\end{macrocode}
+
+并排图形，使用\pkg{subcaption}
+浮动图形和表格标题样式, \pkg{caption}
+\begin{macrocode}
+	\RequirePackage[labelformat=simple]{subcaption}	
+\end{macrocode}
+
+\pkg{pdfpages} 便于插入扫描后的授权说明书
+\begin{macrocode}
+	\RequirePackage{pdfpages}
+	\includepdfset{fitpaper=true}
+\end{macrocode}
+
+更好的列表环境
+\begin{macrocode}
+	\RequirePackage[shortlabels]{enumitem}
+	\RequirePackage{environ}
+\end{macrocode}
+
+禁止 \LaTeX{} 自动调整多余的页面底部空白，并保持脚注仍然在底部。脚注按页编号
+\begin{macrocode}
+	\ifnote@raggedbottom 
+		\RequirePackage[bottom,perpage,hang]{footmisc}
+		\raggedbottom
+	\else 
+		\RequirePackage[perpage,hang]{footmisc}
+	\fi 
+\end{macrocode}
+
+利用 \pkg{xeCJKfntef} 实现汉字的下划线和盒子内两段对齐，并可以避免 \cs{makebox} \oarg{width}\oarg{s} 可能产生的 underful boxes
+\begin{macrocode}
+	\RequirePackage{xeCJKfntef}
+	\RequirePackage{soul}
+\end{macrocode}
+
+表格控制
+\begin{macrocode}
+	\RequirePackage{array}	
+\end{macrocode}
+
+使用三线表 \cs{toprule} \cs{midrule} \cs{bottomrule}
+
+\begin{macrocode}
+	\RequirePackage{booktabs}	
+\end{macrocode}
+
+\begin{macrocode}
+	\RequirePackage{url}	
+\end{macrocode}
+
+如果用户未在导言区调用 \pkg{biblatex} 则自动调用 \pkg{natbib}
+\begin{macrocode}
+	\AtEndPreamble{
+		\@ifpackageloaded{biblatex}{}{
+			\@ifpackageloaded{apacite}{}{
+				\RequirePackage{natbib}
+			}
+		}
+	}
+	\AtEndOfPackageFile*{natbib}{
+		\@ifpackageloaded{apacite}{}{
+			\RequirePackage{bibunits}
+		}
+	}
+
+\end{macrocode}
+
+对冲突的宏包报错
+\begin{macrocode}
+	\newcommand\note@package@conflict[2]{
+		\AtBeginOfPackageFile*{#2}{
+			\note@error{The "#2" package is incompatible with required "#1"
+		}
+	}
+
+	\note@package@conflict{unicode-math}{amscd}
+	\note@package@conflict{unicode-math}{amsfonts}
+	\note@package@conflict{unicode-math}{amssymb}
+	\note@package@conflict{unicode-math}{bbm}
+	\note@package@conflict{unicode-math}{eucal}
+	\note@package@conflict{unicode-math}{eufrak}
+	\note@package@conflict{unicode-math}{mathrsfs}
+
+	\AtBeginOfPackageFile*{setspace}{
+		\note@error{The "setspace" package is incompatible with table environment , which will make invalidate the float format}
+\end{macrocode}
+
+\subsection{页面设置}
+\label{sec:layout}
+
+% 研究生《写作指南》：
+% 页边距：上下左右均为 3.0 厘米，装订线 0 厘米；
+% 页眉距边界：2.2 厘米，页脚距边界：2.2 厘米。
+%
+% 本科生《写作指南》：
+% 页边距：上：3.8 厘米，下：3.2 厘米，左右：3 厘米，装订线：左 0.2 厘米。
+% 本科生 Word 模板：
+% 无页眉，页脚距边界：1.75 厘米。
+%
+% \pkg{fancyhdr} 的页眉是沿底部对齐的，所以只需设置 \cs{headsep}，
+% \cs{headheight} 可以适当增加高度允许多行页眉。
+% 研究生：\cs{headsep} = $\SI{3}{cm} - \SI{2.2}{cm} - \SI{10.5}{bp} \times 1.3
+% \approx \SI{0.3}{cm}$。
+%
+%\begin{macrocode}
+\geometry{
+  paper          = a4paper,  % 210 * 297mm
+  marginparwidth = 2cm,
+  marginparsep   = 0.5cm,
+}
+\newcommand\note@set@geometry{%
+  \ifthu@degree@bachelor
+    \geometry{
+      top        = 3.8cm,
+      bottom     = 3.2cm,
+      left       = 3.2cm,
+      right      = 3cm,
+      headheight = 1.9cm,
+      headsep    = 1.9cm,
+      footskip   = 1.45cm,
+    }%
+    \ifthu@output@print
+      \geometry{
+        left       = 3.2cm,
+        right      = 3cm,
+      }%
+    \else
+      \geometry{
+        hmargin    = 3cm,
+      }%
+    \fi
+  \else
+    \geometry{
+      margin     = 3cm,
+      headheight = 2.7cm,
+      headsep    = 0.3cm,
+      footskip   = 0.8cm,
+    }%
+  \fi
+}
+\note@set@geometry
+\note@option@hook{degree}{\note@set@geometry}
+\note@option@hook{output}{\note@set@geometry}
+%    \end{macrocode}
+
+\subsection{主文档格式}
+\label{sec:mainbody}
+
+\subsubsection{Three matters}
+
+% \begin{macro}{\cleardoublepage}
+% 对于 \textsl{openright} 选项，必须保证章首页右开，且如果前章末页无内容须
+% 清空其页眉页脚。
+%    \begin{macrocode}
+\def\cleardoublepage{%
+  \clearpage
+  \if@twoside
+    \ifthu@output@print
+      \ifodd\c@page
+      \else
+        \thispagestyle{empty}%
+        \hbox{}%
+        \newpage
+        \if@twocolumn
+          \hbox{}\newpage
+        \fi
+      \fi
+    \fi
+  \fi
+}
+%    \end{macrocode}
+% \end{macro}
+%
+% \begin{macro}{\frontmatter}
+% \begin{macro}{\mainmatter}
+% \begin{macro}{\backmatter}
+% 我们的单面和双面模式与常规的不太一样。
+%    \begin{macrocode}
+\renewcommand\frontmatter{%
+  \cleardoublepage
+  \@mainmatterfalse
+  \pagenumbering{Roman}%
+}
+\renewcommand\mainmatter{%
+  \cleardoublepage
+  \@mainmattertrue
+  \pagenumbering{arabic}%
+}
+\renewcommand\backmatter{%
+  \if@openright
+    \cleardoublepage
+  \else
+    \clearpage
+  \fi
+  \@mainmatterfalse
+  \notesetup{toc-depth = 0}%
+}
+%    \end{macrocode}
+% \end{macro}
+% \end{macro}
+% \end{macro}
+%
+% \subsubsection{字体}
+% \label{sec:font}
+% 使用 \pkg{fontspec} 配置字体。
+%    \begin{macrocode}
+\ifthu@fontset@mac
+  \notesetup{
+    font     = times,
+    cjk-font = mac,
+  }
+\else
+  \ifthu@fontset@windows
+    \notesetup{
+      font     = times,
+      cjk-font = windows,
+    }
+  \else
+    \ifthu@fontset@fandol
+      \notesetup{
+        font     = termes,
+        cjk-font = fandol,
+      }
+    \else
+      \ifthu@fontset@ubuntu
+        \notesetup{
+          font     = termes,
+          cjk-font = noto,
+        }
+      \fi
+    \fi
+  \fi
+\fi
+%    \end{macrocode}
+%
+% 检测系统
+%    \begin{macrocode}
+\ifthu@system@auto
+  \IfFileExists{/System/Library/Fonts/Menlo.ttc}{
+    \notesetup{system = mac}
+  }{
+    \IfFileExists{/dev/null}{
+      \IfFileExists{null:}{
+        \notesetup{system = windows}
+      }{
+        \notesetup{system = unix}
+      }
+    }{
+      \notesetup{system = windows}
+    }
+  }
+\fi
+%    \end{macrocode}
+%
+% XITS 字体。
+% XITS 的文件名在 v1.109 2018-09-30
+% 从 \file{xits-regular.otf}、\file{xits-math.otf} 分别改为
+% \file{XITS-Regular.otf}、\file{XITSMath-Regular.otf}。
+%    \begin{macrocode}
+\let\note@font@family@xits\@empty
+\newcommand\note@set@xits@names{%
+  \ifx\note@font@family@xits\@empty
+    \IfFontExistsTF{XITSMath-Regular.otf}{%
+      \gdef\note@font@family@xits{XITS}%
+      \gdef\note@font@style@xits@rm{Regular}%
+      \gdef\note@font@style@xits@bf{Bold}%
+      \gdef\note@font@style@xits@it{Italic}%
+      \gdef\note@font@style@xits@bfit{BoldItalic}%
+      \gdef\note@font@name@xits@math@rm{XITSMath-Regular}%
+      \gdef\note@font@name@xits@math@bf{XITSMath-Bold}%
+    }{%
+      \gdef\note@font@family@xits{xits}%
+      \gdef\note@font@style@xits@rm{regular}%
+      \gdef\note@font@style@xits@bf{bold}%
+      \gdef\note@font@style@xits@it{italic}%
+      \gdef\note@font@style@xits@bfit{bolditalic}%
+      \gdef\note@font@name@xits@math@rm{xits-math}%
+      \gdef\note@font@name@xits@math@bf{xits-mathbold}%
+    }%
+  \fi
+}
+%    \end{macrocode}
+%
+% Libertinus 字体。
+% Libertinus 的文件名在 v6.7 2019-04-03 从小写改为驼峰式，
+% 在大小写敏感的平台上需要进行判断。
+%    \begin{macrocode}
+\let\note@font@family@libertinus\@empty
+\newcommand\note@set@libertinus@names{%
+  \ifx\note@font@family@libertinus\@empty
+    \IfFontExistsTF{LibertinusSerif-Regular.otf}{%
+      \gdef\note@font@family@libertinus@serif{LibertinusSerif}%
+      \gdef\note@font@family@libertinus@sans{LibertinusSans}%
+      \gdef\note@font@name@libertinus@math{LibertinusMath-Regular}%
+      \gdef\note@font@style@libertinus@rm{Regular}%
+      \gdef\note@font@style@libertinus@bf{Bold}%
+      \gdef\note@font@style@libertinus@it{Italic}%
+      \gdef\note@font@style@libertinus@bfit{BoldItalic}%
+    }{%
+      \gdef\note@font@family@libertinus@serif{libertinusserif}%
+      \gdef\note@font@family@libertinus@sans{libertinussans}%
+      \gdef\note@font@name@libertinus@math{libertinusmath-regular}%
+      \gdef\note@font@style@libertinus@rm{regular}%
+      \gdef\note@font@style@libertinus@bf{bold}%
+      \gdef\note@font@style@libertinus@it{italic}%
+      \gdef\note@font@style@libertinus@bfit{bolditalic}%
+    }%
+  \fi
+}
+%    \end{macrocode}
+%
+% STIX Two 字体。
+% STIX 文件名在 v2.10 2020-12-19 从
+% \file{STIX2Text-Regular.otf}、\file{STIX2Math.otf} 分别改为
+% \file{STIXTwoText-Regular.otf}、\file{STIXTwoMath-Regular.otf}。
+%    \begin{macrocode}
+\let\note@font@family@stix\@empty
+\newcommand\note@set@stix@names{%
+  \ifx\note@font@family@stix\@empty
+    \IfFontExistsTF{STIXTwoText-Regular.otf}{%
+      \gdef\note@font@family@stix{STIXTwoText}%
+      \gdef\note@font@name@stix@math{STIXTwoMath-Regular}%
+    }{%
+      \gdef\note@font@family@stix{STIX2Text}%
+      \gdef\note@font@name@stix@math{STIX2Math}%
+    }%
+  \fi
+}
+%    \end{macrocode}
+%
+% 《撰写手册》要求西文字体使用 Times New Roman 和 Arial，
+% 但是在 Linux 下没有这两个字体，所以使用它们的克隆版 TeX Gyre Termes 和
+% TeX Gyre Heros。
+%    \begin{macrocode}
+\ifthu@font@auto
+  \ifthu@system@unix
+    \notesetup{font=termes}
+  \else
+    \notesetup{font=times}
+  \fi
+\fi
+\newcommand\note@load@font@external{%
+  \setmainfont[
+    Path=fonts/,
+    Extension = .ttf,
+    UprightFont = * ,
+    BoldFont = *bd ,
+    ItalicFont = *i ,
+    BoldItalicFont = *bi
+  ]{times}%英文默认为Times New Roman
+  \setsansfont[
+    Path=fonts/,
+    Extension = .ttf,
+    UprightFont = * ,
+    BoldFont = *bd ,
+    ItalicFont = *i ,
+    BoldItalicFont = *bi
+  ]{arial}%
+  \setmonofont[
+    Path=fonts/,
+    Extension = .ttf,
+    UprightFont = * ,
+    BoldFont = *bd ,
+    ItalicFont = *i ,
+    BoldItalicFont = *bi,
+    Scale = MatchLowercase
+  ]{cour}%
+}
+\newcommand\note@load@font@times{%
+  \setmainfont{Times New Roman}%
+  \setsansfont{Arial}%
+  \setmonofont{Courier New}[Scale = MatchLowercase]%
+}
+\newcommand\note@load@font@termes{%
+  \setmainfont{texgyretermes}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-italic,
+    BoldItalicFont = *-bolditalic,
+  ]%
+  \note@load@texgyre@sans@mono
+}
+\newcommand\note@load@texgyre@sans@mono{%
+  \setsansfont{texgyreheros}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-italic,
+    BoldItalicFont = *-bolditalic,
+  ]%
+  \setmonofont{texgyrecursor}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-italic,
+    BoldItalicFont = *-bolditalic,
+    Ligatures      = CommonOff,
+  ]%
+}
+\newcommand\note@load@font@xits{%
+  \note@set@xits@names
+  \setmainfont{\note@font@family@xits}[
+    Extension      = .otf,
+    UprightFont    = *-\note@font@style@xits@rm,
+    BoldFont       = *-\note@font@style@xits@bf,
+    ItalicFont     = *-\note@font@style@xits@it,
+    BoldItalicFont = *-\note@font@style@xits@bfit,
+  ]%
+  \note@load@texgyre@sans@mono
+}
+\newcommand\note@load@font@libertinus{%
+  \note@set@libertinus@names
+  \setmainfont{\note@font@family@libertinus@serif}[
+    Extension      = .otf,
+    UprightFont    = *-\note@font@style@libertinus@rm,
+    BoldFont       = *-\note@font@style@libertinus@bf,
+    ItalicFont     = *-\note@font@style@libertinus@it,
+    BoldItalicFont = *-\note@font@style@libertinus@bfit,
+  ]%
+  \setsansfont{\note@font@family@libertinus@sans}[
+    Extension      = .otf,
+    UprightFont    = *-\note@font@style@libertinus@rm,
+    BoldFont       = *-\note@font@style@libertinus@bf,
+    ItalicFont     = *-\note@font@style@libertinus@it,
+  ]%
+  \setmonofont{lmmonolt10}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-oblique,
+    BoldItalicFont = *-boldoblique,
+  ]%
+}
+\@namedef{thu@load@font@lm}{%
+  \setmainfont{lmroman10}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-italic,
+    BoldItalicFont = *-bolditalic,
+  ]%
+  \setsansfont{lmsans10}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-oblique,
+    BoldItalicFont = *-boldoblique,
+  ]%
+  \setmonofont{lmmonolt10}[
+    Extension      = .otf,
+    UprightFont    = *-regular,
+    BoldFont       = *-bold,
+    ItalicFont     = *-oblique,
+    BoldItalicFont = *-boldoblique,
+  ]%
+}
+\newcommand\note@load@font{%
+  \@nameuse{thu@load@font@\note@font}%
+}
+\note@load@font
+\note@option@hook{font}{\note@load@font}
+%    \end{macrocode}
+
+%
+% 使用 \pkg{unicode-math} 配置数学字体
+%    \begin{macrocode}
+\ifthu@language@chinese
+  \notesetup{math-style=GB}%
+\else
+  \notesetup{math-style=TeX}%
+\fi
+\note@option@hook{language}{%
+  \ifthu@language@chinese
+    \notesetup{math-style=GB}%
+  \else
+    \notesetup{math-style=TeX}%
+  \fi
+}
+\newcommand\note@xits@integral@stylistic@set{%
+  %\ifthu@language@english
+  \ifthu@math@style@GB
+    8%upright
+  \fi
+}
+\newcommand\note@load@math@font@xits{%
+  \note@set@xits@names
+  \setmathfont{\note@font@name@xits@math@rm}[
+    Extension    = .otf,
+    BoldFont     = \note@font@name@xits@math@bf,
+    StylisticSet = \note@xits@integral@stylistic@set,
+  ]%
+  \setmathfont{\note@font@name@xits@math@rm}[
+    Extension    = .otf,
+    StylisticSet = 1,
+    range        = {cal,bfcal},
+  ]%
+}
+\newcommand\note@load@math@font@times{%
+  \setmathfont{texgyretermes-math}[
+    Extension    = .otf,
+    StylisticSet = \note@xits@integral@stylistic@set,
+  ]%
+  \setmathfont{texgyretermes-math}[
+    Extension    = .otf,
+    StylisticSet = 1,
+    range        = {cal,bfcal},
+  ]%
+}
+\newcommand\note@load@math@font@stix{%
+  \note@set@stix@names
+  \setmathfont{\note@font@name@stix@math}[
+    Extension    = .otf,
+    StylisticSet = \note@xits@integral@stylistic@set,
+  ]%
+  \setmathfont{\note@font@name@stix@math}[
+    Extension    = .otf,
+    StylisticSet = 1,
+    range        = {cal,bfcal},
+  ]%
+}
+\newcommand\note@load@math@font@libertinus{%
+  \note@set@libertinus@names
+  \setmathfont{\note@font@name@libertinus@math .otf}%
+}
+\newcommand\note@load@math@font@lm{%
+  \setmathfont{latinmodern-math.otf}%
+}
+\newcommand\note@load@math@font@cambria{%
+  \setmathfont[Path = "fonts/"]{CambriaMath.otf}%
+}
+%    \end{macrocode}
+%
+% 中文字体
+%    \begin{macrocode}
+\ifthu@cjk@font@auto
+  \ifthu@system@mac
+    \notesetup{cjk-font = mac}
+  \else
+    \ifthu@system@windows
+      \notesetup{cjk-font = windows}
+    \else
+      \IfFontExistsTF{Noto Serif CJK SC}{
+        \notesetup{cjk-font = noto}
+      }{
+        \notesetup{cjk-font = fandol}
+      }
+    \fi
+  \fi
+\fi
+\newcommand\note@load@cjk@font@external{%
+  \xeCJKsetup{EmboldenFactor=3}%
+  \setCJKmainfont[
+    AutoFakeBold = true,
+    Path = "fonts/",
+    ItalicFont   = SimKai.ttf,
+  ]{SimSun.ttc}%
+  \setCJKsansfont[Path = "fonts/",AutoFakeBold]{SimHei.ttf}%
+  \setCJKmonofont[Path = "fonts/",AutoFakeBold]{SimFang.ttf}%
+  \setCJKfamilyfont{zhsong}[Path = "fonts/",AutoFakeBold]{SimSun.ttc}%
+  \setCJKfamilyfont{zhhei}[Path = "fonts/",AutoFakeBold]{SimHei.ttf}%
+  \setCJKfamilyfont{zhkai}[Path = "fonts/",AutoFakeBold]{SimKai.ttf}%
+  \setCJKfamilyfont{zhfs}[Path = "fonts/",AutoFakeBold]{SimFang.ttf}%
+}
+\newcommand\note@load@cjk@font@windows{%
+  \xeCJKsetup{EmboldenFactor=3}%
+  \setCJKmainfont{SimSun}[
+    AutoFakeBold = true,
+    ItalicFont   = KaiTi,
+  ]%
+  \setCJKsansfont{SimHei}[AutoFakeBold]%
+  \setCJKmonofont{FangSong}%
+  \setCJKfamilyfont{zhsong}{SimSun}[AutoFakeBold]%
+  \setCJKfamilyfont{zhhei}{SimHei}[AutoFakeBold]%
+  \setCJKfamilyfont{zhkai}{KaiTi}%
+  \setCJKfamilyfont{zhfs}{FangSong}%
+}
+\newcommand\note@load@cjk@font@mac{%
+  \setCJKmainfont{Songti SC}[
+    UprightFont    = * Light,
+    BoldFont       = * Bold,
+    ItalicFont     = Kaiti SC,
+    BoldItalicFont = Kaiti SC Bold,
+  ]%
+  \setCJKsansfont{Heiti SC}[BoldFont=* Medium]%
+  \setCJKmonofont{STFangsong}
+  \setCJKfamilyfont{zhsong}{Songti SC}[
+    UprightFont = * Light,
+      BoldFont  = * Bold,
+  ]%
+  \setCJKfamilyfont{zhhei}{Heiti SC}[
+    UprightFont = * Light,
+    BoldFont    = * Medium,
+  ]%
+  \setCJKfamilyfont{zhfs}{STFangsong}%
+  \setCJKfamilyfont{zhkai}{Kaiti SC}[BoldFont = * Bold]%
+  \setCJKfamilyfont{zhli}{Baoli SC}%
+  \setCJKfamilyfont{zhyuan}{Yuanyi SC}[
+    UprightFont = * Light,
+    BoldFont    = * Bold,
+  ]%
+}
+%    \end{macrocode}
+%
+% 注意 Noto CJK 的 regular 字重名字不带“Regular”。
+%    \begin{macrocode}
+\newcommand\note@load@cjk@font@noto{%
+  \setCJKmainfont{Noto Serif CJK SC}[
+    UprightFont    = * Light,
+    BoldFont       = * Bold,
+    ItalicFont     = FandolKai-Regular,
+    ItalicFeatures = {Extension = .otf},
+  ]%
+  \setCJKsansfont{Noto Sans CJK SC}[
+    BoldFont    = * Medium,
+  ]%
+  \setCJKmonofont{Noto Sans Mono CJK SC}%
+  \setCJKfamilyfont{zhsong}{Noto Serif CJK SC}[
+    UprightFont = * Light,
+    UprightFont = * Bold,
+  ]%
+  \setCJKfamilyfont{zhhei}{Noto Sans CJK SC}[
+    BoldFont    = * Medium,
+  ]%
+  \setCJKfamilyfont{zhfs}{FandolFang}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+  ]%
+  \setCJKfamilyfont{zhkai}{FandolKai}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+  ]%
+}
+\newcommand\note@load@cjk@font@fandol{%
+  \setCJKmainfont{FandolSong}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+    BoldFont    = *-Bold,
+    ItalicFont  = FandolKai-Regular,
+  ]%
+  \setCJKsansfont{FandolHei}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+    BoldFont    = *-Bold,
+  ]%
+  \setCJKmonofont{FandolFang}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+  ]%
+  \setCJKfamilyfont{zhsong}{FandolSong}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+    BoldFont    = *-Bold,
+  ]%
+  \setCJKfamilyfont{zhhei}{FandolHei}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+    BoldFont    = *-Bold,
+  ]%
+  \setCJKfamilyfont{zhfs}{FandolFang}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+  ]%
+  \setCJKfamilyfont{zhkai}{FandolKai}[
+    Extension   = .otf,
+    UprightFont = *-Regular,
+  ]%
+}
+\ifthu@cjk@font@none\else
+  \providecommand\songti{\CJKfamily{zhsong}}
+  \providecommand\heiti{\CJKfamily{zhhei}}
+  \providecommand\fangsong{\CJKfamily{zhfs}}
+  \providecommand\kaishu{\CJKfamily{zhkai}}
+\fi
+\newcommand\note@load@cjk@font{%
+  %\setCJKfamilyfont{FZXBSJ}[Path = "fonts/",AutoFakeBold]{FZXBSJ.otf}%
+  %\setCJKfamilyfont{SourceHanSansCN}[Path = "fonts/"]{SourceHanSansCN-Regular.otf}%
+  %\setCJKfamilyfont{SourceHanSerifCN}[Path = "fonts/"]{SourceHanSerifCN-Regular.otf}%
+  %\newfontfamily\siyuanheiti@en[Path = "fonts/"]{SourceHanSansCN-Regular.otf}%
+  %\newfontfamily\siyuansongti@en[Path = "fonts/"]{SourceHanSerifCN-Regular.otf}%
+  \@nameuse{thu@load@cjk@font@\note@cjk@font}%
+  %\providecommand{\fzxbiaosong}{\CJKfamily{FZXBSJ}}
+  %\providecommand{\siyuanheiti}{\CJKfamily{SourceHanSansCN}}
+  %\providecommand{\siyuansongti}{\CJKfamily{SourceHanSerifCN}}
+}
+\note@load@cjk@font
+\note@option@hook{cjk-font}{\note@load@cjk@font}
+%    \end{macrocode}
+%
+% \begin{macro}{\normalsize}
+% 正文小四号 (12bp) 字，行距为固定值 20 bp。
+% 其他字号的行距按照相同的比例设置。
+%
+% 表达式行的行距为单倍行距，段前空 6 磅，段后空 6 磅。
+%    \begin{macrocode}
+\renewcommand\normalsize{%
+  \@setfontsize\normalsize{12bp}{20bp}%
+  \abovedisplayskip 6bp%
+  \abovedisplayshortskip 6bp%
+  \belowdisplayshortskip 6bp%
+  \belowdisplayskip \abovedisplayskip
+}
+\normalsize
+\ifx\MakeRobust\@undefined \else
+    \MakeRobust\normalsize
+\fi
+\DeclareRobustCommand\small{%
+   \@setfontsize\small{10.5bp}{17.5bp}%
+   \abovedisplayskip 6bp%
+   \abovedisplayshortskip 6bp%
+   \belowdisplayshortskip 6bp%
+   \def\@listi{\leftmargin\leftmargini
+               \topsep \z@skip
+               \parsep \z@skip
+               \itemsep \z@skip}%
+   \belowdisplayskip \abovedisplayskip
+}
+\DeclareRobustCommand\footnotesize{%
+   \@setfontsize\footnotesize{9bp}{15bp}%
+   \abovedisplayskip 6bp%
+   \abovedisplayshortskip 6bp%
+   \belowdisplayshortskip 6bp%
+   \def\@listi{\leftmargin\leftmargini
+               \topsep \z@skip
+               \parsep \z@skip
+               \itemsep \z@skip}%
+   \belowdisplayskip \abovedisplayskip
+}
+\DeclareRobustCommand\scriptsize{\@setfontsize\scriptsize{7.5bp}{12.5bp}}
+\DeclareRobustCommand\tiny{\@setfontsize\tiny{6.5bp}{10.83bp}}
+\DeclareRobustCommand\large{\@setfontsize\large{15bp}{25bp}}
+\DeclareRobustCommand\Large{\@setfontsize\Large{18bp}{30bp}}
+\DeclareRobustCommand\LARGE{\@setfontsize\LARGE{22bp}{36.67bp}}
+\DeclareRobustCommand\huge{\@setfontsize\huge{24bp}{40bp}}
+\DeclareRobustCommand\Huge{\@setfontsize\Huge{26bp}{43.33bp}}
+%    \end{macrocode}
+% \end{macro}
+
+
+% WORD 中的字号对应该关系如下（1bp = 72.27/72 pt）:
+% \begin{center}
+% \begin{longtable}{llll}
+% \toprule
+% 初号 & 42bp & 14.82mm & 42.1575pt \\
+% 小初 & 36bp & 12.70mm & 36.135 pt \\
+% 一号 & 26bp & 9.17mm & 26.0975pt \\
+% 小一 & 24bp & 8.47mm & 24.09pt \\
+% 二号 & 22bp & 7.76mm & 22.0825pt \\
+% 小二 & 18bp & 6.35mm & 18.0675pt \\
+% 三号 & 16bp & 5.64mm & 16.06pt \\
+% 小三 & 15bp & 5.29mm & 15.05625pt \\
+% 四号 & 14bp & 4.94mm & 14.0525pt \\
+% 小四 & 12bp & 4.23mm & 12.045pt \\
+% 五号 & 10.5bp & 3.70mm & 10.59375pt \\
+% 小五 & 9bp & 3.18mm & 9.03375pt \\
+% 六号 & 7.5bp & 2.56mm & \\
+% 小六 & 6.5bp & 2.29mm & \\
+% 七号 & 5.5bp & 1.94mm & \\
+% 八号 & 5bp & 1.76mm & \\\bottomrule
+% \end{longtable}
+% \end{center}
+%
+% \begin{macro}{\note@def@fontsize}
+% 根据习惯定义字号。用法：
+%
+% \cs{thu@def@fontsize}\marg{字号名称}\marg{磅数}
+%
+% 避免了字号选择和行距的紧耦合。所有字号定义时为单倍行距，并提供选项指定行距倍数。
+%    \begin{macrocode}
+\def\note@def@fontsize#1#2{%
+  \expandafter\newcommand\csname #1\endcsname[1][1.3]{%
+    \fontsize{#2}{##1\dimexpr #2}\selectfont}}
+%    \end{macrocode}
+% \end{macro}
+%
+% 一组字号定义。
+%    \begin{macrocode}
+\note@def@fontsize{chuhao}{42bp}
+\note@def@fontsize{xiaochu}{36bp}
+\note@def@fontsize{yihao}{26bp}
+\note@def@fontsize{xiaoyi}{24bp}
+\note@def@fontsize{erhao}{22bp}
+\note@def@fontsize{xiaoer}{18bp}
+\note@def@fontsize{sanhao}{16bp}
+\note@def@fontsize{xiaosan}{15bp}
+\note@def@fontsize{sihao}{14bp}
+\note@def@fontsize{xiaosi}{12bp}
+\note@def@fontsize{wuhao}{10.5bp}
+\note@def@fontsize{xiaowu}{9bp}
+\note@def@fontsize{liuhao}{7.5bp}
+\note@def@fontsize{xiaoliu}{6.5bp}
+\note@def@fontsize{qihao}{5.5bp}
+\note@def@fontsize{bahao}{5bp}
+%    \end{macrocode}
+
+
+% \subsubsection{语言设置}
+%
+% 定义 \cs{thu@main@language}，当在导言区修改 \option{language} 时，
+% 保存为论文的主要语言；
+% \cs{thu@reset@main@language} 则用于正文中恢复为主要语言。
+%    \begin{macrocode}
+\notesetup{main-language=\note@language}%
+\let\note@main@language\note@language
+\note@option@hook{language}{%
+  \ifx\@begindocumenthook\@undefined\else
+    \notesetup{main-language=\note@language}%
+    \let\note@main@language\note@language
+  \fi
+}
+\newcommand\note@reset@main@language{%
+    \notesetup{language = \note@main@language}%
+    \let\note@language\note@main@language
+}
+%    \end{macrocode}
+%
+% 根据语言设置各章节的名称，只有在导言区设置 \option{degree} 和
+% \option{language} 时会修改，而在正文局部切换语言时则不变。
+%    \begin{macrocode}
+\newcommand\note@set@chapter@names{%
+  \ifthu@main@language@chinese
+    \def\bibname{参考文献}%
+    \def\appendixname{附录}%
+    \def\indexname{索引}%
+    \def\note@acknowledgements@name{致\quad 谢}%
+    \def\note@conclusion@name{结\quad 论}%
+    \ifthu@degree@bachelor
+      \def\contentsname{目\quad 录}%
+      \def\listfigurename{插图索引}%
+      \def\listtablename{表格索引}%
+      \def\note@list@figure@table@name{插图和附表索引}%
+      \def\note@list@algorithm@name{算法索引}%
+      \def\listequationname{公式索引}%
+      \def\note@denotation@name{主要符号对照表}%
+      \def\note@resume@name{在学期间参加课题的研究成果}%
+    \else
+      \def\listfigurename{插图清单}%
+      \def\listtablename{附表清单}%
+      \def\note@list@figure@table@name{插图和附表清单}%
+      \def\note@list@algorithm@name{算法清单}%
+      \def\listequationname{公式清单}%
+      \ifthu@degree@graduate
+        \def\contentsname{目\quad 录}%
+        \def\note@denotation@name{符号和缩略语说明}%
+        \def\note@resume@name{个人简历、在学期间完成的相关学术成果}%
+        \def\note@statement@name{南方科技大学学位论文原创性声明和使用授权说明}%
+        \def\note@statement@toc@name{南方科技大学学位论文原创性声明和使用授权说明}%
+      \else  % degree = postdoc
+        \def\contentsname{目\qquad 次}%
+        \def\note@denotation@name{符号表}%
+        \def\note@resume@name{个人简历、发表的学术论文与科研成果}%
+      \fi
+    \fi
+  \else
+    \ifthu@main@language@english
+      \def\indexname{Index}%
+      \ifthu@degree@bachelor
+        \def\contentsname{CONTENTS}%
+        \def\listfigurename{FIGURES}%
+        \def\listtablename{TABLES}%
+        \def\note@list@figure@table@name{FIGURES AND TABLES}%
+        \def\note@list@algorithm@name{ALGORITHMS}%
+        \def\listequationname{EQUATIONS}%
+        \def\note@denotation@name{ABBREVIATIONS}%
+        \def\bibname{REFERENCES}%
+        \def\appendixname{APPENDIX}%
+        \def\note@acknowledgements@name{ACKNOWLEDGEMENTS}%
+        \def\note@resume@name{PUBLICATIONS}%
+      \else
+        \def\contentsname{TABLE OF CONTENTS}%
+        \def\listfigurename{LIST OF FIGURES}%
+        \def\listtablename{LIST OF TABLES}%
+        \def\note@list@figure@table@name{LIST OF FIGURES AND TABLES}%
+        \def\note@list@algorithm@name{LIST OF ALGORITHMS}%
+        \def\listequationname{LIST OF EQUATIONS}%
+        \def\note@denotation@name{LIST OF SYMBOLS AND ACRONYMS}%
+        \def\note@conclusion@name{CONCLUSION}%
+        \def\bibname{REFERENCES}%
+        \def\appendixname{APPENDIX}%
+        \def\note@acknowledgements@name{ACKNOWLEDGEMENTS}%
+        \def\note@resume@name{RESUME AND ACADEMIC ACHIEVEMENTS}%
+        \def\note@statement@name{DECLARATION OF ORIGINALITY AND AUTHORIZATION OF THESIS}%
+        \def\note@statement@toc@name{DECLARATION OF ORIGINALITY AND AUTHORIZATION OF THESIS, SOUTHERN UNIVERSITY OF SCIENCE AND TECHNOLOGY}%
+      \fi
+    \fi
+  \fi
+}
+\note@set@chapter@names
+\note@option@hook{degree}{\note@set@chapter@names}
+\note@option@hook{main-language}{\note@set@chapter@names}
+%    \end{macrocode}
+%
+% 这部分名称在正文中局部地修改语言时会发生变化，比如英文摘要、
+% 本科生附录的阅读报告。
+%    \begin{macrocode}
+\newcommand\note@set@names{%
+  \ifthu@language@chinese
+    \ctexset{
+      figurename = 图,
+      tablename  = 表,
+    }%
+    \def\note@algorithm@name{算法}%
+    \def\note@equation@name{公式}%
+    \def\note@assumption@name{假设}%
+    \def\note@definition@name{定义}%
+    \def\note@proposition@name{命题}%
+    \def\note@lemma@name{引理}%
+    \def\note@theorem@name{定理}%
+    \def\note@axiom@name{公理}%
+    \def\note@corollary@name{推论}%
+    \def\note@exercise@name{练习}%
+    \def\note@example@name{例}%
+    \def\note@remark@name{注释}%
+    \def\note@problem@name{问题}%
+    \def\note@conjecture@name{猜想}%
+    \def\note@proof@name{证明}%
+    \def\note@theorem@separator{：}%
+  \else
+    \ifthu@language@english
+      \ctexset{
+        figurename = {Figure},
+        tablename  = {Table},
+      }%
+      \def\note@algorithm@name{Algorithm}%
+      \def\note@equation@name{Equation}% 仅在listofequations中使用
+      % 以下环境均为正文中使用的定理环境
+      \def\note@assumption@name{Assumption}%
+      \def\note@definition@name{Definition}%
+      \def\note@proposition@name{Proposition}%
+      \def\note@lemma@name{Lemma}%
+      \def\note@theorem@name{Theorem}%
+      \def\note@axiom@name{Axiom}%
+      \def\note@corollary@name{Corollary}%
+      \def\note@exercise@name{Exercise}%
+      \def\note@example@name{Example}%
+      \def\note@remark@name{Remark}%
+      \def\note@problem@name{Problem}%
+      \def\note@conjecture@name{Conjecture}%
+      \def\note@proof@name{Proof}%
+      \def\note@theorem@separator{:}%
+    \fi
+  \fi
+}
+\note@set@names
+\note@option@hook{language}{\note@set@names}
+%    \end{macrocode}
+%
+% 带圈数字和星号使用中文字体。
+%    \begin{macrocode}
+\xeCJKDeclareCharClass{CJK}{"2460 -> "2473}
+\xeCJKDeclareCharClass{CJK}{"2605}
+%    \end{macrocode}
+%
+% \newcommand\unicodechar[1]{U#1（\symbol{"#1}）}
+% 由于 Unicode 的一些标点符号是中西文混用的：
+% \unicodechar{00B7}、
+% \unicodechar{2013}、
+% \unicodechar{2014}、
+% \unicodechar{2018}、
+% \unicodechar{2019}、
+% \unicodechar{201C}、
+% \unicodechar{201D}、
+% \unicodechar{2025}、
+% \unicodechar{2026}、
+% \unicodechar{2E3A}，
+% 所以要根据语言设置正确的字体。
+% \footnote{\url{https://github.com/CTeX-org/ctex-kit/issues/389}}
+% 此外切换语言时，有一部分名称是需要被重新定义的。
+%    \begin{macrocode}
+\newcommand\note@set@punctuations{%
+  \ifthu@language@chinese
+    \xeCJKDeclareCharClass{FullLeft}{"2018, "201C}%
+    \xeCJKDeclareCharClass{FullRight}{
+      "00B7, "2019, "201D, "2013, "2014, "2025, "2026, "2E3A,
+    }%
+  \else
+    \ifthu@language@english
+      \xeCJKDeclareCharClass{HalfLeft}{"2018, "201C}%
+      \xeCJKDeclareCharClass{HalfRight}{
+        "00B7, "2019, "201D, "2013, "2014, "2025, "2026, "2E3A,
+      }%
+    \fi
+  \fi
+}
+\note@set@punctuations
+\note@option@hook{language}{\note@set@punctuations}
+%    \end{macrocode}
+%
+
+\subsubsection{页眉页脚}
+\label{sec:headerfooter}
+
+% \pkg{fancyhdr} 定义页眉页脚很方便，但是有一个非常隐蔽的坑。
+% 第一次调用 \pkg{fancyhdr} 定义的样式时会修改 \cs{chaptermark}，
+% 这会导致页眉信息错误（多余章号并且英文大写）。
+% 这是因为在 \cs{ps@fancy} 中对 \cs{chaptermark} 进行重定义，
+% 所以我们先调用 \cs{ps@fancy}，再修改 \cs{chaptermark}。
+
+\begin{macrocode}
+	\pagestyle{fancy}	
+\end{macrocode}
+
+
+% 定义页眉和页脚。
+% 研究生要求：
+% 页眉宋体五号字，宋体五号字居中书写；
+% 页码五号 Times New Roman 体。
+%
+% 本科生要求：
+% 页眉：无；
+% 页码：位于页面底端，居中书写。
+%
+% 本科外文专业要求页码字号 12pt。
+
+\begin{macrocode}
+	\fancypagestyle{plain}{
+		\fancyhf{}
+		\renewcommand\footrulewidth{0pt}
+		\ifnote@degree@bachelor
+			\renewcommand\headrulewidth{0pt}
+			\fancyfoot[C]{
+				\ifnote@main@language@chinese 
+					\xiaowu 
+				\else
+					\normalsize
+				\fi
+				\thepage
+			}
+			\let\@mkboth\@goobletwo
+			\let\chaptermark\@gobble
+		\else
+			\renewcommand\headrulewidth{0.75bp}
+		    \fancyhead[C]{\wuhao\leftmark}%
+			\fancyfoot[C]{\wuhao\thepage}%
+			\let\@mkboth\markboth
+			\ifthu@main@language@chinese
+				\def\chaptermark##1{%
+					\markboth{\CTEXifname{\CTEXthechapter\quad}{}##1}{}%
+				}%
+			\else
+				\def\chaptermark##1{%
+					\markboth{\CTEXifname{\MakeTextUppercase{\CTEXthechapter\quad}}{}##1}{}%
+				}%
+			\fi
+		\fi
+		\let\sectionmark\@gobble
+	}
+\pagestyle{plain}
+
+\end{macrocode}
+
+

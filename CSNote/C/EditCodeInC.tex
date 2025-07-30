@@ -18,6 +18,9 @@
 
 .c 文件编译后会生成.out文件，
 
+编译命令
+gcc -c xyz.c 会将xyz.c 文件编译为 xyz.o 文件。(如果你希望编译后的文件能换一个名字，需要加上 -0)
+
 
 \begin{figure}
 	\centering
@@ -26,6 +29,8 @@
 	
 \end{figure}
 
+
+
 \subsection{C文件各部分介绍}
 \subsubsection{头文件 (Header Files)}
 头文件是指包含 \textbf{#include}的部分。
@@ -33,12 +38,68 @@
 若是之后加 \textbf{""} 是指：引入的文件是自己编写的头文件 (非标准头文件)
 
 
-\cs{宏定义} 
+\cs{宏定义 Macros} 
 
 
 
 
+
+
+
+\section{汇编 Assembling}
+汇编就是通过编译器 (gcc) 将人类可理解的程序转换称为处理器可以理解和执行的数字编码。
+
+
+\section{链接 Linking}
+链接程序需要将一个或多个文件结合在一起，生成实际的可执行的二进制文件。
+
+对于C语言自己的库，通常情况下是默认链接的。如果你希望使用其他非C的库，你必须使用 \textbf{-l} 实现对目标文件的链接。
+
+\section{make}
+平时我们编译少量的文件我们常用的操作为使用gcc编译器对代码文件进行编译。但对于开发一个大型应用如果继续采用 gcc编译器，那么效果就不尽人意了。此时，make工具出现了。make工具可以自动的解决文件修改后的链接问题。
+
+make通过默认读取\textbf{Makefile}文件，在这个文件中指定了如何编译文件。
 
 \section{Testing and debugging}
+Testing 是为了找到bugs ，而 debugging 是为了修改bugs。
 
-\section{}
+按照测试的不同特点，我们将测试分为以下几类：
+\begin{enumerate}
+	\item 黑盒测试
+	\item 白盒测试
+			
+\end{enumerate}
+
+\subsection{黑盒测试} 
+
+黑盒测试也叫功能测试，通过测试确定每一个功能是否都能正常使用。在测试过程中，将程序看作一个不能打开的黑盒子，用户是看不到程序的内部结构的，只能对程序接口进行测试，对比开发文档和输出结果判断程序是否正常。
+
+黑盒测试过程中，测试人员要尽可能的考虑哪些情况会导致问题的出现。
+
+设计测试案例的技巧
+\begin{enumerate}
+	\item 测试错误案例的一些想法
+		\begin{itemize}
+			\item 确保测试覆盖所有的错误情况。
+			\item 测试越界后的案例。
+			\item 在有效边界进行测试。
+		\end{itemize}
+
+	\item 测试输入的建议
+		\begin{itemize}
+			\item 考虑是否有特殊的情况
+			\item 考虑是否有令人误解的情况
+			\item 考虑所有的类型，如果开发人员使用的错误的类型，则会发生错误情况。
+			\item 对于数值输入，考虑正数、负数和零
+			\item 对于序列输入，考虑空序列、单元素序列和多元素序列
+			\item 对于字符输入，考虑小写字符、大写字符、数字、标点符号、空格和不可打印字符。
+			\item 
+		\end{itemize}
+	
+
+\end{enumerate}
+
+
+\subsection{白盒测试}
+
+
